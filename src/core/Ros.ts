@@ -57,7 +57,7 @@ export default class Ros extends EventEmitter<
   } & Record<string, [RosbridgeMessage]>
 > {
   // private write, public read via getter method
-  #isConnected: boolean;
+  isConnectedBool: boolean;
 
   private transport?: ITransport;
   private transportFactory: ITransportFactory;
@@ -79,7 +79,7 @@ export default class Ros extends EventEmitter<
   } = {}) {
     super();
 
-    this.#isConnected = false;
+    this.isConnectedBool = false;
     this.transportFactory = transportFactory;
 
     if (url) {
@@ -88,7 +88,7 @@ export default class Ros extends EventEmitter<
   }
 
   public isConnected(): boolean {
-    return this.#isConnected;
+    return this.isConnectedBool;
   }
 
   public async connect(url: string): Promise<void> {
@@ -100,12 +100,12 @@ export default class Ros extends EventEmitter<
     this.transport = transport;
 
     transport.on("open", (event: TransportEvent) => {
-      this.#isConnected = true;
+      this.isConnectedBool = true;
       this.emit("connection", event);
     });
 
     transport.on("close", (event: TransportEvent) => {
-      this.#isConnected = false;
+      this.isConnectedBool = false;
       this.emit("close", event);
     });
 
