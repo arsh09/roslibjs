@@ -9,7 +9,7 @@
       // Connecting to ROS
       // -----------------
       var ros = new ROSLIB.Ros({
-        url: "ws://localhost:9090",
+        url: "ws://localhost:9000",
       });
 
       // If there is an error on the backend, an 'error' emit will be emitted.
@@ -18,6 +18,8 @@
         document.getElementById("connected").style.display = "none";
         document.getElementById("closed").style.display = "none";
         document.getElementById("error").style.display = "inline";
+        document.getElementById("sendGoal").style.display = "none";
+        document.getElementById("cancelGoal").style.display = "none";
         console.log(error);
       });
 
@@ -28,6 +30,8 @@
         document.getElementById("error").style.display = "none";
         document.getElementById("closed").style.display = "none";
         document.getElementById("connected").style.display = "inline";
+        document.getElementById("sendGoal").style.display = "inline";
+        document.getElementById("cancelGoal").style.display = "inline";
       });
 
       ros.on("close", function () {
@@ -35,39 +39,59 @@
         document.getElementById("connecting").style.display = "none";
         document.getElementById("connected").style.display = "none";
         document.getElementById("closed").style.display = "inline";
+        document.getElementById("sendGoal").style.display = "none";
+        document.getElementById("cancelGoal").style.display = "none";
       });
+
 
       // The ActionClient
       // ----------------
 
-      var fibonacciClient = new ROSLIB.Action({
-        ros: ros,
-        name: "/fibonacci",
-        actionType: "example_interfaces/Fibonacci",
-      });
+      let fibonacci_client
+      let fibonacci_goal_id 
+      document.getElementById("sendGoal").addEventListener("click", handle_send_goal);
+      document.getElementById("cancelGoal").addEventListener("click", handle_cancel_goal);
 
-      // Send an action goal
-      var goal = { order: 5 };
 
-      var goal_id = fibonacciClient.sendGoal(
-        goal,
-        function (result) {
-          console.log(
-            "Result for action goal on " +
-              fibonacciClient.name +
-              ": " +
-              result.sequence,
-          );
-        },
-        function (feedback) {
-          console.log(
-            "Feedback for action on " +
-              fibonacciClient.name +
-              ": " +
-              feedback.sequence,
-          );
-        },
-      );
+      function handle_send_goal() { 
+
+        fibonacci_client = new ROSLIB.Action({
+          ros: ros,
+          name: "/fibonacci",
+          actionType: "action_tutorials_interfaces/action/Fibonacci",
+        });
+  
+        // Send an action goal
+        var goal = { order: 10 };
+  
+        fibonacci_goal_id = fibonacci_client.sendGoal(
+          goal,
+          function (result) {
+            console.log(
+              "Result for action goal on " +
+              fibonacci_client.name +
+                ": " +
+                result.sequence,
+            );
+          },
+          function (feedback) {
+            console.log(
+              "Feedback for action on " +
+              fibonacci_client.name +
+                ": " +
+                feedback.partial_sequence,
+            );
+          },
+        );
+      }
+
+      function handle_cancel_goal() { 
+        if ( fibonacci_client && fibonacci_goal_id ) {
+          fibonacci_client?.cancelGoal(fibonacci_goal_id)
+        }
+      }
+
+
     </script>
   </head>
 
@@ -90,6 +114,10 @@
         Error in the backend!
       </p>
       <p id="closed" style="display: none">Connection closed.</p>
+      <div id="button" style="margin: 20px;"> 
+        <button id="sendGoal" style="display: none"> Send Goal </button>
+        <button id="cancelGoal" style="display: none"> Cancel Goal </button>
+      </div>
     </div>
   </body>
 </html>
